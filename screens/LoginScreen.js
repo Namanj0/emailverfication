@@ -12,7 +12,7 @@ const LoginScreen = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, user => {
       if (user) {
-        navigation.replace('Logout');
+        navigation.replace('HomeScreen'); // Navigate to HomeScreen if user is already logged in
       }
     });
 
@@ -33,6 +33,7 @@ const LoginScreen = () => {
       .then(userCredentials => {
         const user = userCredentials.user;
         console.log('Logged in with:', user.email);
+        navigation.replace('HomeScreen'); // Navigate to HomeScreen on successful login
       })
       .catch(error => alert(error.message));
   };
@@ -76,8 +77,6 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -85,7 +84,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   inputContainer: {
-    width: '80%'
+    width: '80%',
   },
   input: {
     backgroundColor: 'white',
@@ -124,3 +123,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export default LoginScreen;

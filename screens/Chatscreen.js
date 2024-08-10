@@ -2,12 +2,14 @@ import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import Header from '../components/Header';
 import ChatList from '../components/ChatList';
+import BottomBar from '../components/BottomBar';
 
 const Chatscreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Header title="Chat" />
       <ChatList />
+      <BottomBar />
     </SafeAreaView>
   );
 };

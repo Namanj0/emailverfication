@@ -1,222 +1,217 @@
 import { useNavigation } from '@react-navigation/native';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View, FlatList, TouchableWithoutFeedback } from 'react-native';
+import { Alert, Keyboard, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Dropdown } from 'react-native-element-dropdown';
 import { db } from '../firebase';
 import useAuth from '../hooks/useAuth';
+
+const universityData = [
+  { label: 'Naman Uni', value: '1' },
+  { label: 'Chirag Uni', value: '2' },
+  { label: 'Item 3', value: '3' },
+  { label: 'Item 4', value: '4' },
+  { label: 'Item 5', value: '5' },
+  { label: 'Item 6', value: '6' },
+  { label: 'Item 7', value: '7' },
+  { label: 'Item 8', value: '8' },
+];
+
+const ageData = [
+  { label: '17', value: '17' },
+  { label: '18', value: '18' },
+  { label: '19', value: '19' },
+];
+
+const genderData = [
+  { label: 'Male', value: 'Male' },
+  { label: 'Female', value: 'Female' },
+];
 
 const ModalScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
   const [image, setImage] = useState('');
   const [occupation, setOccupation] = useState('');
-  const [age, setAge] = useState('');
+  const [age, setAge] = useState(null);
   const [name, setName] = useState('');
-  const [questions, setQuestions] = useState([
-    {
-      id: 1,
-      question: "Diet Preference",
-      options: [
-        { label: "Veg", selected: false },
-        { label: "Non-Veg", selected: false },
-      ],
-      minSelection: 1,
-      maxSelection: 1,
-    },
-    {
-      id: 2,
-      question: "Alcohol Consumption",
-      options: [
-        { label: "Frequently", selected: false },
-        { label: "Occasionally", selected: false },
-        { label: "Never", selected: false },
-      ],
-      minSelection: 1,
-      maxSelection: 1,
-    },
-    {
-      id: 3,
-      question: "Smoking Habit",
-      options: [
-        { label: "Smoker", selected: false },
-        { label: "Non-Smoker", selected: false },
-      ],
-      minSelection: 1,
-      maxSelection: 1,
-    },
-  ]);
+  const [university, setUniversity] = useState(null);
+  const [gender, setGender] = useState(null);
 
-  const incomplete = !image || !occupation || !age || !name || !questions.every(question => question.options.some(option => option.selected));
+  const incomplete = !image || !occupation || !age || !name || !university || !gender;
 
-  const updateUserProfile = async () => {
-    try {
-      const selectedAnswers = questions.map((question) => {
-        return {
-          question: question.question,
-          selectedOption: question.options.find(option => option.selected)?.label || '',
-        };
-      });
-
-      await setDoc(doc(db, 'users', user.uid), {
+  const goToLifestyleScreen = () => {
+    if (incomplete) {
+      Alert.alert('Error!', 'Please fill out all fields.');
+      return;
+    }
+    navigation.navigate('LifestyleScreen', {
+      userProfile: {
         id: user.uid,
         displayName: name,
         photoURL: image || 'default_image_url', // Replace with your default image URL if needed
         occupation,
         age,
-        lifestyle: selectedAnswers, // Store selected answers
-        timestamp: serverTimestamp(),
-      });
-      Alert.alert('Information', 'Your profile has been updated successfully!');
-      navigation.navigate('HomeScreen');
-    } catch (error) {
-      Alert.alert('Error!', error.message);
-    }
-  };
-
-  const onSelect = (questionId, optionIndex) => {
-    const newQuestions = questions.map((question) => {
-      if (question.id === questionId) {
-        const selectedCount = question.options.filter((option) => option.selected).length;
-
-        if (question.maxSelection === 1) {
-          return {
-            ...question,
-            options: question.options.map((option, index) => ({
-              ...option,
-              selected: index === optionIndex ? !option.selected : false,
-            })),
-          };
-        }
-
-        return {
-          ...question,
-          options: question.options.map((option, index) => {
-            if (index === optionIndex) {
-              if (option.selected && selectedCount <= question.minSelection) {
-                Alert.alert(`You must select at least ${question.minSelection} option(s).`);
-                return option;
-              }
-              return { ...option, selected: !option.selected };
-            }
-            return option;
-          }),
-        };
-      }
-      return question;
+        university: university.label,
+        gender,
+      },
     });
-    setQuestions(newQuestions);
   };
-
-  const renderQuestion = ({ item: question }) => (
-    <View style={{ marginBottom: 20, marginTop: 20 }}>
-      <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#333', textAlign: 'left' }}>
-        {question.question}
-      </Text>
-      <FlatList
-        data={question.options}
-        renderItem={({ item, index }) => (
-          <TouchableWithoutFeedback onPress={() => onSelect(question.id, index)}>
-            <View
-              style={[
-                {
-                  width: '30%',
-                  height: 50,
-                  padding: 10,
-                  marginVertical: 10,
-                  marginHorizontal: '1.5%',
-                  borderColor: '#ddd',
-                  borderWidth: 1,
-                  borderRadius: 25,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: item.selected ? '#03a9f4' : 'white',
-                  shadowColor: '#000',
-                  shadowOpacity: 0.1,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowRadius: 5,
-                },
-              ]}
-            >
-              <Text style={{ fontSize: 16, color: item.selected ? 'white' : '#333', textAlign: 'center' }}>
-                {item.label}
-              </Text>
-            </View>
-          </TouchableWithoutFeedback>
-        )}
-        keyExtractor={(item, index) => index.toString()}
-        numColumns={3}
-        columnWrapperStyle={{ justifyContent: 'flex-start' }}
-        contentContainerStyle={{ justifyContent: 'flex-start' }}
-      />
-    </View>
-  );
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', paddingTop: 20 }}>
-      <Text style={{ fontSize: 20, color: 'gray', padding: 10, fontWeight: 'bold' }}>
-        Welcome {user.displayName}
-      </Text>
-      <Text style={{ textAlign: 'center', padding: 10, fontWeight: 'bold', color: 'red' }}>
-        Step 1: The Display Name
-      </Text>
-      <TextInput
-        value={name}
-        onChangeText={(text) => setName(text)}
-        placeholder="Enter your display name"
-        style={{ textAlign: 'center', fontSize: 20, paddingBottom: 10 }}
-      />
-      <Text style={{ textAlign: 'center', padding: 10, fontWeight: 'bold', color: 'red' }}>
-        Step 2: The Profile Pic
-      </Text>
-      <TextInput
-        value={image}
-        onChangeText={(text) => setImage(text)}
-        placeholder="Enter a Profile Pic URL"
-        style={{ textAlign: 'center', fontSize: 20, paddingBottom: 10 }}
-      />
-      <Text style={{ textAlign: 'center', padding: 10, fontWeight: 'bold', color: 'red' }}>
-        Step 3: The Occupation
-      </Text>
-      <TextInput
-        value={occupation}
-        onChangeText={(text) => setOccupation(text)}
-        placeholder="Enter your occupation"
-        style={{ textAlign: 'center', fontSize: 20, paddingBottom: 10 }}
-      />
-      <Text style={{ textAlign: 'center', padding: 10, fontWeight: 'bold', color: 'red' }}>
-        Step 4: The Age
-      </Text>
-      <TextInput
-        value={age}
-        onChangeText={(text) => setAge(text)}
-        placeholder="Enter your age"
-        style={{ textAlign: 'center', fontSize: 20, paddingBottom: 10 }}
-        keyboardType="numeric"
-      />
-      <FlatList
-        data={questions}
-        renderItem={renderQuestion}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ justifyContent: 'flex-start' }}
-      />
-      <TouchableOpacity
-        disabled={incomplete}
-        onPress={updateUserProfile}
-        style={{
-          width: 256,
-          padding: 12,
-          borderRadius: 16,
-          position: 'absolute',
-          bottom: 20,
-          backgroundColor: incomplete ? 'gray' : 'red',
-          alignItems: 'center'
-        }}
-      >
-        <Text style={{ color: 'white', fontSize: 20 }}>Update Profile</Text>
-      </TouchableOpacity>
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={{ flex: 1, alignItems: 'center', paddingTop: 20, paddingHorizontal: 20 }}>
+        <Text style={{ fontSize: 20, color: 'gray', padding: 10, fontWeight: 'bold' }}>
+          Welcome {user.displayName}
+        </Text>
+        <View style={{ alignItems: 'flex-start', width: '100%' }}>
+          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
+            Display Name
+          </Text>
+          <TextInput
+            value={name}
+            onChangeText={(text) => setName(text)}
+            placeholder="Enter your display name"
+            style={{
+              fontSize: 20,
+              padding: 10,
+              marginBottom: 20,
+              width: '100%',
+              borderWidth: 1,
+              borderColor: 'gray',
+              borderRadius: 8,
+            }}
+          />
+          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
+            Profile Pic
+          </Text>
+          <TextInput
+            value={image}
+            onChangeText={(text) => setImage(text)}
+            placeholder="Enter a Profile Pic URL"
+            style={{
+              fontSize: 20,
+              padding: 10,
+              marginBottom: 20,
+              width: '100%',
+              borderWidth: 1,
+              borderColor: 'gray',
+              borderRadius: 8,
+            }}
+          />
+          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
+            Phone Number
+          </Text>
+          <TextInput
+            value={occupation}
+            onChangeText={(text) => setOccupation(text)}
+            placeholder="Enter your occupation"
+            style={{
+              fontSize: 20,
+              padding: 10,
+              marginBottom: 20,
+              width: '100%',
+              borderWidth: 1,
+              borderColor: 'gray',
+              borderRadius: 8,
+            }}
+          />
+          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
+            Your Age
+          </Text>
+          <Dropdown
+            style={{
+              width: '100%',
+              marginBottom: 20,
+              borderWidth: 1,
+              borderColor: 'gray',
+              borderRadius: 8,
+              padding: 10,
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#999' }}
+            selectedTextStyle={{ fontSize: 16, color: '#333' }}
+            inputSearchStyle={{ height: 40, fontSize: 16, color: '#333' }}
+            data={ageData}
+            maxHeight={200}
+            labelField="label"
+            valueField="value"
+            placeholder="Select age"
+            value={age}
+            onChange={(item) => {
+              setAge(item.value);
+            }}
+          />
+          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
+            The University
+          </Text>
+          <Dropdown
+            style={{
+              width: '100%',
+              marginBottom: 20,
+              borderWidth: 1,
+              borderColor: 'gray',
+              borderRadius: 8,
+              padding: 10,
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#999' }}
+            selectedTextStyle={{ fontSize: 16, color: '#333' }}
+            inputSearchStyle={{ height: 40, fontSize: 16, color: '#333' }}
+            data={universityData}
+            search
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder="Select university"
+            searchPlaceholder="Search..."
+            value={university}
+            onChange={(item) => {
+              setUniversity(item);
+            }}
+          />
+          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
+            The Gender
+          </Text>
+          <Dropdown
+            style={{
+              width: '100%',
+              marginBottom: 20,
+              borderWidth: 1,
+              borderColor: 'gray',
+              borderRadius: 8,
+              padding: 10,
+            }}
+            placeholderStyle={{ fontSize: 16, color: '#999' }}
+            selectedTextStyle={{ fontSize: 16, color: '#333' }}
+            inputSearchStyle={{ height: 40, fontSize: 16, color: '#333' }}
+            data={genderData}
+            maxHeight={200}
+            labelField="label"
+            valueField="value"
+            placeholder="Select gender"
+            value={gender}
+            onChange={(item) => {
+              setGender(item.value);
+            }}
+          />
+        </View>
+        <TouchableOpacity
+          onPress={goToLifestyleScreen}
+          style={{
+            width: '90%',
+            padding: 12,
+            borderRadius: 16,
+            position: 'absolute',
+            bottom: 20,
+            backgroundColor: incomplete ? 'gray' : 'red',
+            alignItems: 'center',
+          }}
+        >
+          <Text style={{ color: 'white', fontSize: 20 }}>Continue</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
 export default ModalScreen;
-//this one
+//this

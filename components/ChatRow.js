@@ -43,7 +43,7 @@ const ChatRow = ({ matchDetails }) => {
       />
       <View style={styles.textContainer}>
         <Text style={styles.displayName}>{matchedUserInfo?.displayName}</Text>
-        <Text style={styles.lastMessage}>{lastMessage || 'Say hi!'}</Text>
+        <Text style={styles.lastMessage}>{lastMessage || 'Say hi to your new roomie!'}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -57,11 +57,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: 'white',
     marginHorizontal: 8,
-    marginVertical: 4,
+    marginVertical: 15,
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
   },

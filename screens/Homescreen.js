@@ -1,28 +1,17 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Image, SafeAreaView, Text, TouchableOpacity, View, Modal, Pressable } from 'react-native';
-import { AntDesign, Entypo, Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
 import { db } from '../firebase';
 import useAuth from '../hooks/useAuth';
 import generateId from '../lib/generateId';
 import { collection, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, setDoc, where } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import BottomBar from '../components/BottomBar';
+import { StatusBar } from 'expo-status-bar';
 
 const DUMMY_DATA = [
-  {
-    displayName: 'Jennifer',
-    id: '1',
-    lastName: 'Aniston',
-    occupation: 'Actress',
-    age: 22,
-    photoURL: 'https://example.com/path-to-jennifer-aniston-image.jpg',
-    lifestyle: [
-      { question: 'Diet Preference', selectedOption: 'Veg' },
-      { question: 'Alcohol Consumption', selectedOption: 'Never' },
-      { question: 'Smoking Habit', selectedOption: 'Smoker' }
-    ]
-  },
-  // other dummy data...
+  // Example dummy data if needed
 ];
 
 const Homescreen = () => {
@@ -34,66 +23,72 @@ const Homescreen = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const swiperRef = useRef();
 
+
   useLayoutEffect(() => {
-    const unsub = onSnapshot(doc(db, 'users', user.uid), (snapshot) => {
-      if (!snapshot.exists()) {
-        navigation.navigate('Modal');
-      }
-      return unsub;
-    });
-  }, [navigation, user.uid]);
+    if (user) {
+      const unsub = onSnapshot(doc(db, 'users', user.uid), (snapshot) => {
+        if (!snapshot.exists()) {
+          navigation.navigate('OnboardingScreen');
+        }
+        return unsub;
+      });
+      return () => unsub();
+    }
+  }, [navigation, user]);
 
   useEffect(() => {
-    let unsub;
+    if (user) {
+      let unsub;
 
-    const fetchCards = async () => {
-      const passes = await getDocs(collection(db, 'users', user.uid, 'passes')).then((snapshot) =>
-        snapshot.docs.map((doc) => doc.id)
-      );
-      const swipes = await getDocs(collection(db, 'users', user.uid, 'swipes')).then((snapshot) =>
-        snapshot.docs.map((doc) => doc.id)
-      );
-      const passedUserIds = passes.length > 0 ? passes : ['fallback'];
-      const swipedUserIds = swipes.length > 0 ? swipes : ['fallback'];
-
-      const allUserIds = [...passedUserIds, ...swipedUserIds];
-      const batchedQueries = [];
-
-      while (allUserIds.length > 0) {
-        const batch = allUserIds.splice(0, 10);
-        batchedQueries.push(
-          query(
-            collection(db, 'users'),
-            where('id', 'not-in', batch)
-          )
+      const fetchCards = async () => {
+        const passes = await getDocs(collection(db, 'users', user.uid, 'passes')).then((snapshot) =>
+          snapshot.docs.map((doc) => doc.id)
         );
-      }
+        const swipes = await getDocs(collection(db, 'users', user.uid, 'swipes')).then((snapshot) =>
+          snapshot.docs.map((doc) => doc.id)
+        );
+        const passedUserIds = passes.length > 0 ? passes : ['fallback'];
+        const swipedUserIds = swipes.length > 0 ? swipes : ['fallback'];
 
-      const profilesFromDB = [];
-      for (const q of batchedQueries) {
-        const snapshot = await getDocs(q);
-        snapshot.docs.forEach((doc) => {
-          if (doc.id !== user.uid) {
-            profilesFromDB.push({
-              id: doc.id,
-              ...doc.data(),
-            });
-          }
-        });
-      }
+        const allUserIds = [...passedUserIds, ...swipedUserIds];
+        const batchedQueries = [];
 
-      if (profilesFromDB.length === 0) {
-        setNoMoreProfiles(true);
-      } else {
-        setNoMoreProfiles(false);
-      }
+        while (allUserIds.length > 0) {
+          const batch = allUserIds.splice(0, 10);
+          batchedQueries.push(
+            query(
+              collection(db, 'users'),
+              where('id', 'not-in', batch)
+            )
+          );
+        }
 
-      setProfiles([...profilesFromDB, ...DUMMY_DATA]); // Include dummy data
-    };
+        const profilesFromDB = [];
+        for (const q of batchedQueries) {
+          const snapshot = await getDocs(q);
+          snapshot.docs.forEach((doc) => {
+            if (doc.id !== user.uid) {
+              profilesFromDB.push({
+                id: doc.id,
+                ...doc.data(),
+              });
+            }
+          });
+        }
 
-    fetchCards();
-    return unsub;
-  }, [user.uid]);
+        if (profilesFromDB.length === 0) {
+          setNoMoreProfiles(true);
+        } else {
+          setNoMoreProfiles(false);
+        }
+
+        setProfiles([...profilesFromDB, ...DUMMY_DATA]); // Include dummy data
+      };
+
+      fetchCards();
+      return unsub;
+    }
+  }, [user]);
 
   const swipeLeft = (cardIndex) => {
     if (!profiles[cardIndex]) return;
@@ -140,8 +135,10 @@ const Homescreen = () => {
       );
     }
 
+    const { lifestyle } = card;
+
     return (
-      <View style={{ backgroundColor: 'white', height: '65%', borderRadius: 16 }}>
+      <View style={{ backgroundColor: 'white', height: '60%', borderRadius: 16 }}>
         <Image
           source={{ uri: card.photoURL || 'https://example.com/path-to-placeholder-image.jpg' }}
           style={{ height: '100%', width: '100%', borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
@@ -152,8 +149,8 @@ const Homescreen = () => {
             width: '100%',
             height: 100,
             flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
+            justifyContent: 'left',
+            alignItems: 'left',
             paddingHorizontal: 16,
             paddingVertical: 8,
             borderBottomLeftRadius: 16,
@@ -169,47 +166,55 @@ const Homescreen = () => {
             {card.displayName}, {card.age}
           </Text>
           <Text style={{ fontSize: 16, color: 'gray' }}>{card.occupation}</Text>
-          <TouchableOpacity
-            style={{
-              marginTop: 10,
-              backgroundColor: '#FF5864',
-              paddingHorizontal: 10,
-              paddingVertical: 5,
-              borderRadius: 5,
-            }}
-            onPress={() => {
-              setSelectedProfile(card);
-              setModalVisible(true);
-            }}
-          >
-            <Text style={{ color: 'white' }}>Preferences</Text>
-          </TouchableOpacity>
+          <Text style={{ fontSize: 16, color: 'gray' }}>{card.university}</Text>
+          <Text style={{ fontSize: 16, color: 'gray' }}>{card.gender}</Text>
+          {lifestyle && (
+            <View style={{ marginTop: 10 }}>
+              {Object.values(lifestyle).map((selectedOption, index) => (
+                <Text key={index} style={{ fontSize: 16, color: 'gray' }}>
+                  {typeof selectedOption === 'string' ? selectedOption : JSON.stringify(selectedOption)}
+                </Text>
+              ))}
+            </View>
+          )}
         </View>
       </View>
     );
   };
 
+
+
+
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+      <StatusBar style="dark" />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 10 }}>
-        <TouchableOpacity onPress={logout}>
-          <Image source={{ uri: user.photoURL }} style={{ height: 40, width: 40, borderRadius: 20 }} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Modal')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Logout')}>
           <Image
-            source={{ uri: user.photoURL }} // Use user photoURL
+            source={{ uri: user?.photoURL || 'https://i.pinimg.com/564x/f0/c7/c7/f0c7c729f1a989450f9ebd92023e48f8.jpg' }}
             resizeMode="contain"
-            style={{ height: 48, width: 48 }}
+            style={{ height: 48, width: 48, borderRadius: '50%' }}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
-          <Ionicons name="chatbubbles-sharp" color="#FF5864" size={30} />
-        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+          <TouchableOpacity>
+            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>LOGO</Text>
+          </TouchableOpacity></View>
+        <View style={{ flex: 1 }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+          <TouchableOpacity onPress={() => navigation.navigate('SinglePageOnboardingScreen')} style={{ marginRight: 5, }}>
+            <Ionicons name="help-circle-outline" color="#FF5864" size={33} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
+            <Ionicons name="notifications-outline" color="#FF5864" size={30} />
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={{ flex: 1 }}>
         {noMoreProfiles ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>No more profiles left</Text>
+            <Text>No Profiles Available</Text>
           </View>
         ) : (
           <Swiper
@@ -220,6 +225,25 @@ const Homescreen = () => {
             onSwipedRight={(cardIndex) => swipeRight(cardIndex)}
             verticalSwipe={false}
             infinite={false}
+            overlayLabels={{
+              left: {
+                title: 'NOPE',
+                style: {
+                  label: {
+                    textAlign: 'right',
+                    color: '#EC4D25',
+                  },
+                },
+              },
+              right: {
+                title: 'LIKE',
+                style: {
+                  label: {
+                    color: '#11B356',
+                  },
+                },
+              },
+            }}
           />
         )}
       </View>
@@ -227,10 +251,10 @@ const Homescreen = () => {
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          paddingHorizontal: 20,
+          paddingHorizontal: 65,
           paddingBottom: 20,
           position: 'absolute',
-          bottom: 0,
+          bottom: 55,
           width: '100%',
         }}
       >
@@ -238,9 +262,9 @@ const Homescreen = () => {
           onPress={() => swiperRef.current.swipeLeft()}
           style={{
             backgroundColor: '#FF5864',
-            width: 70,
-            height: 70,
-            borderRadius: 35,
+            width: 65,
+            height: 65,
+            borderRadius: 30,
             alignItems: 'center',
             justifyContent: 'center',
             shadowColor: '#000',
@@ -256,8 +280,8 @@ const Homescreen = () => {
           onPress={() => swiperRef.current.swipeRight()}
           style={{
             backgroundColor: '#4CAF50',
-            width: 70,
-            height: 70,
+            width: 65,
+            height: 65,
             borderRadius: 35,
             alignItems: 'center',
             justifyContent: 'center',
@@ -271,32 +295,10 @@ const Homescreen = () => {
           <AntDesign name="hearto" size={24} color="white" />
         </TouchableOpacity>
       </View>
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View style={{ width: '90%', backgroundColor: 'white', borderRadius: 10, padding: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{selectedProfile?.firstName}Preferences</Text>
-            {selectedProfile?.lifestyle.map((item, index) => (
-              <View key={index} style={{ marginVertical: 5 }}>
-                <Text style={{ fontSize: 16 }}>{item.selectedOption}</Text>
-              </View>
-            ))}
-            <Pressable
-              onPress={() => setModalVisible(false)}
-              style={{
-                backgroundColor: '#FF5864',
-                paddingVertical: 10,
-                borderRadius: 5,
-                alignItems: 'center',
-                marginTop: 10,
-              }}
-            >
-              <Text style={{ color: 'white', fontSize: 16 }}>Close</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <BottomBar />
     </SafeAreaView>
   );
 };
 
 export default Homescreen;
+//this

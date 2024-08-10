@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StyleSheet, Text, TouchableOpacity, View, Alert, Image, Switch, ScrollView, SafeAreaView } from 'react-native';
-import { auth } from '../firebase';
-import Header from '../components/Header';
-import BottomBar from '../components/BottomBar';
-import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
+import { auth } from '../../firebase';
+import Header from '../../components/Header';
+import BottomBar from '../../components/BottomBar';
+
 
 const LogoutScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const [darkMode, setDarkMode] = useState(false);
-
   const handleSignOut = () => {
     auth
       .signOut()
@@ -19,6 +18,7 @@ const LogoutScreen = () => {
       })
       .catch((error) => alert(error.message));
   };
+
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -56,21 +56,31 @@ const LogoutScreen = () => {
     <SafeAreaView style={styles.container}>
       <Header title="Profile" />
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.contentContainer}>
-          <TouchableOpacity
-            style={styles.profilePicContainer}
-            onPress={() => navigation.navigate('ImageUploadScreen')}
-          >
+        <View style={styles.container}>
+          <Text style={styles.title}>Profile</Text>
+          <View style={styles.profilePicContainer}>
             {profilePic ? (
               <Image source={{ uri: profilePic }} style={styles.profilePic} />
             ) : (
-              <Image
-                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg' }} // Placeholder image URL
-                style={styles.profilePic}
-              />
+              <Text style={styles.placeholderText}>No Profile Picture</Text>
             )}
-          </TouchableOpacity>
+          </View>
           <Text style={styles.emailText}>{auth.currentUser?.email}</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('ImageUploadScreen')}
+          >
+            <Text style={styles.buttonText}>Edit Photos</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleSignOut} style={styles.button}>
+            <Text style={styles.buttonText}>Sign Out</Text>
+          </TouchableOpacity>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Account Settings</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Modal')} style={styles.button}>
@@ -86,6 +96,7 @@ const LogoutScreen = () => {
               <Text style={styles.deleteButtonText}>Delete Account</Text>
             </TouchableOpacity>
           </View>
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>App Preferences</Text>
             <View style={styles.preferenceRow}>
@@ -99,11 +110,12 @@ const LogoutScreen = () => {
               <Text style={styles.buttonText}>Change Language</Text>
             </TouchableOpacity>
           </View>
+
         </View>
-      </ScrollView>
-      <View style={styles.bottomBarContainer}>
-        <BottomBar />
-      </View>
+        <View style={styles.bottomBarContainer}>
+          <BottomBar />
+        </View></ScrollView>
+        
     </SafeAreaView>
   );
 };
@@ -111,15 +123,16 @@ const LogoutScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F4', // Light gray background
-  },
-  scrollViewContent: {
-    padding: 5,
-    paddingBottom: 80,
-  },
-  contentContainer: {
+    justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: '#f9f9f9',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
   },
   profilePicContainer: {
     width: 120,
@@ -127,25 +140,47 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     overflow: 'hidden',
     marginBottom: 20,
-    borderWidth: 4,
-    borderColor: '#0095F6', // Coral color border
+    backgroundColor: '#ddd',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E0E0E0', // Light gray background
   },
   profilePic: {
     width: '100%',
     height: '100%',
     borderRadius: 60,
   },
-  emailText: {
-    fontSize: 18,
-    color: '#333',
+  placeholderText: {
+    fontSize: 16,
+    color: '#888',
+  },
+  backButton: {
+    padding: 10,
+    backgroundColor: '#007bff',
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  button: {
+    padding: 10,
+    backgroundColor: '#28a745',
+    borderRadius: 5,
+    alignItems: 'center',
     marginBottom: 20,
-    fontWeight: 'bold', // Make email bold
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  emailText: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
   },
   section: {
-    width: '100%',
     marginBottom: 20,
   },
   sectionTitle: {
@@ -156,14 +191,12 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#0095F6',
-    borderWidth: 1,
-    borderColor: '#0077CC', // Darker blue border
     width: '100%',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 5,
     alignItems: 'center',
     marginBottom: 10,
-    elevation: 2,
+    elevation: 1,
   },
   buttonText: {
     color: 'white',
@@ -171,15 +204,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   deleteButton: {
-    backgroundColor: '#FF4B5C', // Red color for delete
-    borderWidth: 1,
-    borderColor: '#CC0000', // Darker red border
+    backgroundColor: '#ED4956',
     width: '100%',
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 5,
     alignItems: 'center',
     marginBottom: 10,
-    elevation: 2,
+    elevation: 1,
   },
   deleteButtonText: {
     color: 'white',

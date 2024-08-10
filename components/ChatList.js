@@ -10,19 +10,29 @@ const ChatList = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'matches'), where('usersMatched', 'array-contains', user.uid)),
-      (snapshot) =>
-        setMatches(
-          snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-        )
-    );
+    if (user?.uid) {
+      const unsubscribe = onSnapshot(
+        query(collection(db, 'matches'), where('usersMatched', 'array-contains', user.uid)),
+        (snapshot) =>
+          setMatches(
+            snapshot.docs.map((doc) => ({
+              id: doc.id,
+              ...doc.data(),
+            }))
+          )
+      );
 
-    return unsubscribe; // Unsubscribe from the listener on component unmount
+      return unsubscribe; // Unsubscribe from the listener on component unmount
+    }
   }, [user]);
+
+  if (!user) {
+    return (
+      <View style={styles.noMatchesContainer}>
+        <Text style={styles.noMatchesText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return matches.length > 0 ? (
     <FlatList

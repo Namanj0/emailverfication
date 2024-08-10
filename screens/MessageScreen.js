@@ -38,7 +38,10 @@ const MessageScreen = () => {
   useEffect(
     () =>
       onSnapshot(
-        query(collection(db, 'matches', matchDetails.id, 'messages'), orderBy('timestamp', 'desc')),
+        query(
+          collection(db, 'matches', matchDetails.id, 'messages'),
+          orderBy('timestamp', 'desc')
+        ),
         (snapshot) =>
           setMessages(
             snapshot.docs.map((doc) => ({
@@ -50,15 +53,23 @@ const MessageScreen = () => {
     [matchDetails]
   );
 
-  const sendMessage = () => {
-    addDoc(collection(db, 'matches', matchDetails.id, 'messages'), {
-      timestamp: serverTimestamp(),
-      userId: user.uid,
-      displayName: matchDetails.users[user.uid].displayName,
-      photoURL: matchDetails.users[user.uid].photoURL,
-      message: input,
-    });
-    setInput('');
+  const sendMessage = async () => {
+    if (input.trim() === '') return; // Don't send empty messages
+
+    const { displayName, photoURL } = matchDetails.users[user.uid] || {}; // Fallback to empty object if undefined
+
+    try {
+      await addDoc(collection(db, 'matches', matchDetails.id, 'messages'), {
+        timestamp: serverTimestamp(),
+        userId: user.uid,
+        displayName: displayName || 'Anonymous', // Provide a default value
+        photoURL: photoURL || 'default-photo-url', // Provide a default value
+        message: input.trim(),
+      });
+      setInput('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   return (
@@ -143,4 +154,3 @@ const styles = StyleSheet.create({
 });
 
 export default MessageScreen;
-//this one

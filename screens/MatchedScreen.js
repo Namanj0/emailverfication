@@ -28,6 +28,15 @@ const MatchedScreen = () => {
       >
         <Text style={styles.buttonText}>Send a Message</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          navigation.goBack();
+          navigation.navigate('HomeScreen');
+        }}
+      >
+        <Text style={styles.buttonText}>Keep Swiping!</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -37,47 +46,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FF5864',
     paddingTop: 20,
-    opacity: 0.89,
+    opacity: 0.95,
   },
   imageContainer: {
     justifyContent: 'center',
+    alignItems: 'center', // Center the match image
     paddingHorizontal: 10,
-    paddingTop: 20,
+    paddingTop: 30, // Added extra padding for better spacing
   },
   matchImage: {
-    height: 80,
-    width: '100%',
+    height: 100, // Increased size for better visibility
+    width: '80%', // Slightly reduced width for better centering
     resizeMode: 'contain',
   },
   matchText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontWeight: '800', // Made text bolder
+    fontSize: 22, // Increased font size
     textAlign: 'center',
-    marginTop: 5,
+    marginTop: 20, // Increased margin for better spacing
   },
   profilesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    marginTop: 5,
+    marginTop: 20, // Increased margin for better spacing
   },
   profileImage: {
-    height: 128,
-    width: 128,
-    borderRadius: 64,
+    height: 140, // Slightly larger profile images
+    width: 140, // Maintain square aspect ratio
+    borderRadius: 70, // Make the profile images circular
+    borderWidth: 4, // Added border for emphasis
+    borderColor: '#fff', // White border around profile images
+    shadowColor: '#000', // Add shadow for a 3D effect
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8, // Elevation for Android shadow
   },
   button: {
     backgroundColor: 'white',
-    margin: 5,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    margin: 10, // Increased margin for better spacing
+    paddingHorizontal: 30, // Increased padding for a more prominent button
+    paddingVertical: 18, // Increased padding for better touch targets
     borderRadius: 30,
-    marginTop: 20,
+    marginTop: 25, // Increased margin for spacing
+    shadowColor: '#000', // Added shadow for button
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5, // Elevation for Android shadow
   },
   buttonText: {
     textAlign: 'center',
     fontWeight: 'bold',
+    fontSize: 18, // Increased font size for readability
+    color: '#FF5864', // Matched button text color with the theme
   },
 });
 
 export default MatchedScreen;
-//thisone
