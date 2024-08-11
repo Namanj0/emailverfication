@@ -18,38 +18,38 @@ const categories = [
   {
     category: "Sports and Fitness",
     options: [
-      "Running", "Cycling", "Swimming", "Gym", "Yoga", "Football", "Tennis",
-      "Volleyball", "Basketball", "Squash", "Cricket"
+      "Gym", "Football",
+      "Cricket"
     ],
   },
   {
     category: "Activities",
     options: [
-      "Cooking & Baking", "Traveling", "Photography", "Reading"
+      "Reading", "Traveling",
     ],
   },
   {
     category: "Social Interests",
     options: [
-      "Parties & Social Gatherings", "Volunteering", "Networking & Meetups"
+      "Parties & Social Gatherings", "Volunteering",
     ],
   },
   {
     category: "Games",
     options: [
-      "Board Games", "Video Games", "Monopoly", "Fortnite", "FIFA"
+      "Board Games", "Video Games",
     ],
   },
   {
     category: "Technology",
     options: [
-      "VR (Virtual Reality)", "Gadgets", "Other Tech Interests"
+      "VR (Virtual Reality)", "Gadgets",
     ],
   },
   {
     category: "Interests",
     options: [
-      "Finance", "Investments", "Coding", "Programming", "Business", "Accounting", "Design"
+      "Finance", "Investments",
     ],
   },
 ];

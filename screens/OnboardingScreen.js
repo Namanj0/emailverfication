@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import React from "react";
 import Onboarding from "react-native-onboarding-swiper";
-import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native"; // Import useNavigation
 
 const OnboardingScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation(); // Initialize navigation
 
   const DotComponent = ({ selected }) => {
     return (
@@ -26,31 +27,48 @@ const OnboardingScreen = () => {
 
   return (
     <Onboarding
-      onSkip={() => navigation.replace("Modal")}
-      onDone={() => navigation.replace("Modal")}
+      onSkip={() => navigation.replace("Modal")} // Use navigation
+      onDone={() => navigation.replace("Modal")} // Use navigation
       DotComponent={DotComponent}
       pages={[
         {
-          backgroundColor: "#fff",
-          title: "Welcome to the App",
-          subtitle: "Explore the features and enjoy your experience.",
+          backgroundColor: "#f5f5f5",
+          title: "Welcome to RoomMate",
+          subtitle: "Your new journey to finding the perfect roommate starts here.",
+          image: <Ionicons name="home" size={100} color="#007bff" />, // Home icon
+        },
+        {
+          backgroundColor: "#e0f7fa",
+          title: "Swipe, Match, Connect",
+          subtitle: "Swipe right to like, left to pass, and connect with potential roommates!",
           image: (
-            <View style={styles.imageContainer}>
-              <View style={styles.imagePlaceholder} />
+            <View style={styles.iconContainer}>
+              <Ionicons name="chatbubbles-sharp" size={100} color="#007bff" />
+              <Text style={styles.iconText}>Chat & Connect</Text>
             </View>
           ),
         },
         {
-          backgroundColor: "#fdeb93",
-          title: "Discover Features",
-          subtitle: "Find out what makes our app unique and useful.",
-          image: <View style={styles.imagePlaceholder} /> // Placeholder
+          backgroundColor: "#e3f2fd",
+          title: "Discover Key Features",
+          subtitle: "Explore the app’s unique features designed to make finding a roommate easy.",
+          image: (
+            <View style={styles.iconContainer}>
+              <Ionicons name="star" size={100} color="#007bff" />
+              <Text style={styles.iconText}>Key Features</Text>
+            </View>
+          ),
         },
         {
-          backgroundColor: "#e9bcbe",
-          title: "Get Started",
-          subtitle: "Let’s get started and make the most of this app!",
-          image: <View style={styles.imagePlaceholder} /> // Placeholder
+          backgroundColor: "#fce4ec",
+          title: "Ready to Get Started?",
+          subtitle: "Sign up and start finding your ideal roommate today!",
+          image: (
+            <View style={styles.iconContainer}>
+              <Ionicons name="person-add" size={100} color="#007bff" />
+              <Text style={styles.iconText}>Sign Up</Text>
+            </View>
+          ),
         },
       ]}
     />
@@ -80,24 +98,15 @@ const styles = StyleSheet.create({
   dotSelected: {
     backgroundColor: '#ff5a5f',
   },
-  imagePlaceholder: {
-    width: 100,
-    height: 100,
-  },
-  imageContainer: {
+  iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  button: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#ff5a5f',
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
+  iconText: {
+    marginTop: 10,
     fontSize: 16,
+    color: '#007bff',
+    textAlign: 'center',
   },
 });
 

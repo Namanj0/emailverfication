@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Image, SafeAreaView, Text, TouchableOpacity, View, Modal, Pressable } from 'react-native';
+import { Image, SafeAreaView, Text, TouchableOpacity, View, Modal, StyleSheet } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
 import { db } from '../firebase';
@@ -9,10 +9,55 @@ import { collection, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, s
 import { useNavigation } from '@react-navigation/native';
 import BottomBar from '../components/BottomBar';
 import { StatusBar } from 'expo-status-bar';
+import SinglePageOnboardingScreen from './SinglePageOnboardingScreen'; // Import the Onboarding Screen
 
 const DUMMY_DATA = [
-  // Example dummy data if needed
+  {
+    id: '1',
+    displayName: 'Messi',
+    photoURL: 'https://digitalhub.fifa.com/transform/057b508f-a50b-4a14-91e9-fc1bf5f443b5/Argentina-v-France-Final-FIFA-World-Cup-Qatar-2022',
+    age: 24,
+    occupation: 'GOAT',
+    university: 'Football',
+    gender: 'Male',
+    lifestyle: {
+      "Diet Preference": "Veg",
+      "Sleeping Habits": "Early Bird",
+      "Fitness Habits": "Daily",
+      "Social Habit": "Introvert",
+    },
+    hobbiesAndInterests: [
+      "Gym",
+      "Football",
+      "Traveling",
+      "Parties & Social Gatherings",
+      "Video Games"
+    ],
+  },
+  {
+    id: '2',
+    displayName: 'Barca',
+    photoURL: 'https://st2.depositphotos.com/2124563/9993/i/450/depositphotos_99936014-stock-illustration-flag-football-club-barcelona-spain.jpg',
+    age: 29,
+    occupation: 'Club',
+    university: 'Football',
+    gender: 'Male',
+    lifestyle: {
+      "Diet Preference": "Non-Veg",
+      "Sleeping Habits": "Night Owl",
+      "Fitness Habits": "Often",
+      "Social Habit": "Ambivert",
+    },
+    hobbiesAndInterests: [
+      "Reading",
+      "Traveling",
+      "Parties & Social Gatherings",
+      "VR (Virtual Reality)",
+      "Investments"
+    ],
+  },
 ];
+
 
 const Homescreen = () => {
   const { user, logout } = useAuth();
@@ -22,7 +67,6 @@ const Homescreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const swiperRef = useRef();
-
 
   useLayoutEffect(() => {
     if (user) {
@@ -135,7 +179,7 @@ const Homescreen = () => {
       );
     }
 
-    const { lifestyle } = card;
+    const { lifestyle, hobbiesAndInterests } = card;
 
     return (
       <View style={{ backgroundColor: 'white', height: '60%', borderRadius: 16 }}>
@@ -177,6 +221,16 @@ const Homescreen = () => {
               ))}
             </View>
           )}
+          {hobbiesAndInterests && (
+            <View style={{ marginTop: 10 }}>
+              <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Hobbies & Interests:</Text>
+              {hobbiesAndInterests.map((hobby, index) => (
+                <Text key={index} style={{ fontSize: 16, color: 'gray' }}>
+                  {hobby}
+                </Text>
+              ))}
+            </View>
+          )}
         </View>
       </View>
     );
@@ -184,26 +238,24 @@ const Homescreen = () => {
 
 
 
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 15, paddingVertical: 10 }}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('Logout')}>
           <Image
             source={{ uri: user?.photoURL || 'https://i.pinimg.com/564x/f0/c7/c7/f0c7c729f1a989450f9ebd92023e48f8.jpg' }}
             resizeMode="contain"
-            style={{ height: 48, width: 48, borderRadius: '50%' }}
+            style={styles.profileImage}
           />
         </TouchableOpacity>
-        <View style={{ flex: 1 }} />
-        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <View style={styles.headerCenter}>
           <TouchableOpacity>
-            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>LOGO</Text>
-          </TouchableOpacity></View>
-        <View style={{ flex: 1 }} />
-        <View style={{ flexDirection: 'row', alignItems: 'center', }}>
-          <TouchableOpacity onPress={() => navigation.navigate('SinglePageOnboardingScreen')} style={{ marginRight: 5, }}>
+            <Text style={styles.logo}>LOGO</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.helpButton}>
             <Ionicons name="help-circle-outline" color="#FF5864" size={33} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
@@ -211,9 +263,9 @@ const Homescreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={{ flex: 1 }}>
+      <View style={styles.swiperContainer}>
         {noMoreProfiles ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={styles.noProfiles}>
             <Text>No Profiles Available</Text>
           </View>
         ) : (
@@ -247,58 +299,117 @@ const Homescreen = () => {
           />
         )}
       </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          paddingHorizontal: 65,
-          paddingBottom: 20,
-          position: 'absolute',
-          bottom: 55,
-          width: '100%',
-        }}
-      >
+      <View style={styles.bottomButtons}>
         <TouchableOpacity
           onPress={() => swiperRef.current.swipeLeft()}
-          style={{
-            backgroundColor: '#FF5864',
-            width: 65,
-            height: 65,
-            borderRadius: 30,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2,
-            shadowRadius: 1.41,
-            elevation: 2,
-          }}
+          style={styles.leftButton}
         >
           <AntDesign name="close" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => swiperRef.current.swipeRight()}
-          style={{
-            backgroundColor: '#4CAF50',
-            width: 65,
-            height: 65,
-            borderRadius: 35,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.2,
-            shadowRadius: 1.41,
-            elevation: 2,
-          }}
+          style={styles.rightButton}
         >
           <AntDesign name="hearto" size={24} color="white" />
         </TouchableOpacity>
       </View>
       <BottomBar />
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <SinglePageOnboardingScreen onClose={() => setModalVisible(false)} />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  profileImage: {
+    height: 48,
+    width: 48,
+    borderRadius: 24,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  helpButton: {
+    marginRight: 5,
+  },
+  swiperContainer: {
+    flex: 1,
+  },
+  noProfiles: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bottomButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 65,
+    paddingBottom: 20,
+    position: 'absolute',
+    bottom: 55,
+    width: '100%',
+  },
+  leftButton: {
+    backgroundColor: '#FF5864',
+    width: 65,
+    height: 65,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  rightButton: {
+    backgroundColor: '#4CAF50',
+    width: 65,
+    height: 65,
+    borderRadius: 35,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white', // Make sure the background color is solid
+  },
+});
 
 export default Homescreen;
 //this

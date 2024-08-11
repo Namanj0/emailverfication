@@ -1,11 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
-const SinglePageOnboardingScreen = () => {
-  const navigation = useNavigation();
-
+const SinglePageOnboardingScreen = ({ onClose }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Our App</Text>
@@ -44,7 +41,7 @@ const SinglePageOnboardingScreen = () => {
       </View>
 
       <TouchableOpacity
-        onPress={() => navigation.replace('HomeScreen')}
+        onPress={onClose}
         style={styles.button}
       >
         <Text style={styles.buttonText}>Continue</Text>

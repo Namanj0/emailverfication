@@ -1,66 +1,60 @@
 import { StyleSheet, FlatList, View, Text, TouchableOpacity, Alert } from "react-native";
 import React, { useState } from "react";
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 // Sample color palette matching ModalScreen
 const COLORS = {
-  primary: '#ff6f61',
-  secondary: '#eeeeee',
-  textPrimary: '#333333',
-  textSecondary: '#ffffff',
-  buttonDisabled: '#b0bec5',
-  buttonActive: '#ff6f61',
+  primary: '#ff6f61', // Example color for selected items
+  secondary: '#eeeeee', // Example color for background and unselected items
+  textPrimary: '#333333', // Example color for text
+  textSecondary: '#ffffff', // Example color for text on selected items
+  buttonDisabled: '#b0bec5', // Example color for disabled button
+  buttonActive: '#ff6f61', // Example color for active button
 };
 
-// Existing questions array
-const questions = [
+const categories = [
   {
-    id: 1,
-    question: "Diet Preference",
+    category: "Sports and Fitness",
     options: [
-      { label: "Veg", selected: false },
-      { label: "Non-Veg", selected: false },
+      "Running", "Cycling", "Swimming", "Gym", "Yoga", "Football", "Tennis",
+      "Volleyball", "Basketball", "Squash", "Cricket"
     ],
-    minSelection: 1,
-    maxSelection: 1,
   },
   {
-    id: 2,
-    question: "Sleeping Habits",
+    category: "Activities",
     options: [
-      { label: "Early Bird", selected: false },
-      { label: "Night Owl", selected: false },
+      "Cooking & Baking", "Traveling", "Photography", "Reading"
     ],
-    minSelection: 1,
-    maxSelection: 1,
   },
   {
-    id: 3,
-    question: "Fitness Habits",
+    category: "Social Interests",
     options: [
-      { label: "Daily", selected: false },
-      { label: "Often", selected: false },
-      { label: "Not for me", selected: false },
+      "Parties & Social Gatherings", "Volunteering", "Networking & Meetups"
     ],
-    minSelection: 1,
-    maxSelection: 1,
   },
   {
-    id: 4,
-    question: "Social Habit",
+    category: "Games",
     options: [
-      { label: "Introvert", selected: false },
-      { label: "Extrovert", selected: false },
-      { label: "Ambivert", selected: false },
+      "Board Games", "Video Games", "Monopoly", "Fortnite", "FIFA"
     ],
-    minSelection: 1,
-    maxSelection: 1,
+  },
+  {
+    category: "Technology",
+    options: [
+      "VR (Virtual Reality)", "Gadgets", "Other Tech Interests"
+    ],
+  },
+  {
+    category: "Interests",
+    options: [
+      "Finance", "Investments", "Coding", "Programming", "Business", "Accounting", "Design"
+    ],
   },
 ];
 
-const LifestyleScreen = () => {
+const HobbiesAndInterestsScreen = () => {
   const [data, setData] = useState(questions);
   const navigation = useNavigation();
   const route = useRoute();
@@ -71,7 +65,7 @@ const LifestyleScreen = () => {
       if (question.id === questionId) {
         const selectedCount = question.options.filter((option) => option.selected).length;
 
-        if (question.maxSelection === 1) {
+        if (question.maxSelection === 3) {
           return {
             ...question,
             options: question.options.map((option, index) => ({
@@ -106,27 +100,10 @@ const LifestyleScreen = () => {
     );
   };
 
-  const handleContinue = async () => {
+
+  const handleContinue = () => {
     if (isAllQuestionsAnswered()) {
-      try {
-        const updatedLifestyle = data.reduce((acc, question) => {
-          const selectedOption = question.options.find((option) => option.selected);
-          if (selectedOption) {
-            acc[question.question] = selectedOption.label;
-          }
-          return acc;
-        }, {});
-
-        await setDoc(doc(db, 'users', userProfile.id), {
-          ...userProfile,
-          lifestyle: updatedLifestyle,
-          timestamp: serverTimestamp(),
-        });
-
-        navigation.navigate('HobbiesAndInterestsScreen');
-      } catch (error) {
-        Alert.alert('Error!', error.message);
-      }
+      updateUserProfile();
     } else {
       Alert.alert("Please answer all questions before continuing.");
     }
@@ -164,7 +141,7 @@ const LifestyleScreen = () => {
         contentContainerStyle={styles.listContent}
       />
       <TouchableOpacity style={[styles.button, !isAllQuestionsAnswered() && styles.buttonDisabled]} onPress={handleContinue} disabled={!isAllQuestionsAnswered()}>
-        <Text style={styles.buttonText}>Continue</Text>
+        <Text style={styles.buttonText}>cont</Text>
       </TouchableOpacity>
     </View>
   );

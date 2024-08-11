@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const DUMMY_DATA = [
   {
-    firstName: 'Jennifer',
+    displayName: 'Jennifer',
     id: '1',
     lastName: 'Aniston',
     occupation: 'Actress',
