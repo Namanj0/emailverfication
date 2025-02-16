@@ -1,17 +1,18 @@
-import { StyleSheet, FlatList, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, FlatList, View, Text, TouchableOpacity, Alert, TextInput } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Ensure this path is correct
 import useAuth from '../hooks/useAuth'; // Ensure this path is correct
+import Header from '../components/Header';
 
 const COLORS = {
-  primary: '#ff6f61',
+  primary: '#03A9F4',
   secondary: '#eeeeee',
   textPrimary: '#333333',
   textSecondary: '#ffffff',
   buttonDisabled: '#b0bec5',
-  buttonActive: '#ff6f61',
+  buttonActive: '#1E90FF',
 };
 
 const categories = [
@@ -58,6 +59,8 @@ const HobbiesAndInterestsScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [customHobby, setCustomHobby] = useState(''); // State for custom hobby
+  const minSelection = 4;
 
   const toggleSelection = (option) => {
     setSelectedOptions(prev =>
@@ -65,21 +68,30 @@ const HobbiesAndInterestsScreen = () => {
     );
   };
 
-  const handleUpdate = async () => {
-    if (selectedOptions.length >= 4) {
+  const handleAddCustomHobby = () => {
+    if (customHobby && !selectedOptions.includes(customHobby)) {
+      setSelectedOptions(prev => [...prev, customHobby]);
+      setCustomHobby(''); // Clear input field after adding
+    } else {
+      Alert.alert('Warning', 'Hobby is already selected or empty.');
+    }
+  };
+
+  const handleContinue = async () => {
+    if (user) {
       try {
+        // Update Firebase with the selected options
         await setDoc(doc(db, 'users', user.uid), {
           hobbiesAndInterests: selectedOptions,
-          timestamp: serverTimestamp(),
-        }, { merge: true }); // Merging to not overwrite existing fields
+          // Merge with existing data
+        }, { merge: true });
 
-        Alert.alert('Information', 'Your interests have been updated successfully!');
-        navigation.navigate('HomeScreen'); // Navigate to HomeScreen
+        // Navigate to the ImageUploadScreen with selected options
+        navigation.navigate('ImageUploadScreen', { selectedOptions });
       } catch (error) {
-        Alert.alert('Error!', error.message);
+        Alert.alert('Error', 'Failed to update your hobbies and interests.');
+        console.error(error);
       }
-    } else {
-      Alert.alert('Warning', 'Please select at least 4 interests.');
     }
   };
 
@@ -109,43 +121,73 @@ const HobbiesAndInterestsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Hobbies and Interests</Text>
+      <View style={{ alignItems: 'flex-start', width: '100%', paddingTop: 20, marginRight: 100 }}>
+        <Header title="Hobbies & Interest" />
+      </View>
+      <View style={styles.customHobbyContainer}>
+        <TextInput
+          style={styles.customHobbyInput}
+          placeholder="Add your custom hobby"
+          value={customHobby}
+          onChangeText={setCustomHobby}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={handleAddCustomHobby}>
+          <Text style={styles.addButtonText}>Add</Text>
+        </TouchableOpacity>
+      </View>
       {categories.length > 0 ? (
         <FlatList
           data={categories}
           renderItem={renderCategory}
           keyExtractor={(item) => item.category}
-          contentContainerStyle={styles.listContent}
         />
       ) : (
         <Text>No categories available</Text>
       )}
       <TouchableOpacity
-        style={[styles.button, selectedOptions.length < 4 && styles.buttonDisabled]}
-        onPress={handleUpdate}
-        disabled={selectedOptions.length < 4}
+        style={[styles.continueButton, { backgroundColor: selectedOptions.length >= minSelection ? COLORS.buttonActive : COLORS.buttonDisabled }]}
+        onPress={handleContinue}
+        disabled={selectedOptions.length < minSelection}
       >
-        <Text style={styles.buttonText}>Update Now</Text>
+        <Text style={styles.continueButtonText}> Continue (
+          {selectedOptions.length}/{minSelection})
+        </Text>
       </TouchableOpacity>
     </View>
   );
 };
 
+export default HobbiesAndInterestsScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 20,
     backgroundColor: COLORS.secondary,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
   },
-  heading: {
-    fontSize: 24,
+  customHobbyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  customHobbyInput: {
+    flex: 1,
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 10,
+    marginRight: 10,
+  },
+  addButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  addButtonText: {
+    color: COLORS.textSecondary,
     fontWeight: 'bold',
-    textAlign: 'left',
-    marginBottom: 10,
-    color: COLORS.textPrimary,
-  },
-  listContent: {
-    justifyContent: 'flex-start',
   },
   categoryContainer: {
     marginBottom: 20,
@@ -153,56 +195,48 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
     color: COLORS.textPrimary,
+    marginBottom: 10,
   },
   optionsContainer: {
-    flexDirection: 'row',
+    flexGrow: 1,
+    justifyContent: 'space-between',
   },
   option: {
-    width: '30%', // Adjust width to fit in multiple columns
-    padding: 10,
-    margin: '1%',
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 25,
     backgroundColor: COLORS.secondary,
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    margin: 4,
+    flexGrow: 1,
+    flexBasis: 0,
     justifyContent: 'center',
     alignItems: 'center',
   },
   selectedOption: {
     backgroundColor: COLORS.primary,
-    borderWidth: 0,
   },
   optionText: {
-    fontSize: 12, // Smaller font size for better fitting
+    fontSize: 14,
     color: COLORS.textPrimary,
-    textAlign: 'center',
   },
   selectedOptionText: {
     color: COLORS.textSecondary,
   },
-  button: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 15,
-    paddingHorizontal: 80,
+  continueButton: {
+    paddingVertical: 18,
+    paddingHorizontal: 32,
     borderRadius: 25,
-    alignSelf: 'center',
-    marginTop: 30,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    width: '100%',
   },
-  buttonDisabled: {
-    backgroundColor: COLORS.buttonDisabled,
-  },
-  buttonText: {
+  continueButtonText: {
     color: COLORS.textSecondary,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
   },
 });
-
-export default HobbiesAndInterestsScreen;

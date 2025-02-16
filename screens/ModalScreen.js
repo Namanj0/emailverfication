@@ -1,26 +1,23 @@
 import { useNavigation } from '@react-navigation/native';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import React, { useState } from 'react';
-import { Alert, Keyboard, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Alert, Keyboard, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View, ScrollView } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { db } from '../firebase';
 import useAuth from '../hooks/useAuth';
 
+
 const universityData = [
   { label: 'Naman Uni', value: '1' },
   { label: 'Chirag Uni', value: '2' },
-  { label: 'Item 3', value: '3' },
-  { label: 'Item 4', value: '4' },
-  { label: 'Item 5', value: '5' },
-  { label: 'Item 6', value: '6' },
-  { label: 'Item 7', value: '7' },
-  { label: 'Item 8', value: '8' },
+  // more options...
 ];
 
 const ageData = [
   { label: '17', value: '17' },
   { label: '18', value: '18' },
   { label: '19', value: '19' },
+  // more options...
 ];
 
 const genderData = [
@@ -31,25 +28,35 @@ const genderData = [
 const ModalScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
-  const [image, setImage] = useState('');
+  const [images, setImages] = useState(['']); // Array to hold multiple image URLs
   const [occupation, setOccupation] = useState('');
   const [age, setAge] = useState(null);
   const [name, setName] = useState('');
   const [university, setUniversity] = useState(null);
   const [gender, setGender] = useState(null);
 
-  const incomplete = !image || !occupation || !age || !name || !university || !gender;
+  const incomplete = !occupation || !age || !name || !university || !gender;
 
-  const goToLifestyleScreen = () => {
+  const saveProfileData = async () => {
     if (incomplete) {
       Alert.alert('Error!', 'Please fill out all fields.');
       return;
     }
+
+    // Save data to Firestore
+    await setDoc(doc(db, 'users', user.uid), {
+      displayName: name,
+      occupation,
+      age,
+      university: university.label,
+      gender,
+      timestamp: serverTimestamp(),
+    });
+
     navigation.navigate('LifestyleScreen', {
       userProfile: {
         id: user.uid,
         displayName: name,
-        photoURL: image || 'default_image_url', // Replace with your default image URL if needed
         occupation,
         age,
         university: university.label,
@@ -58,16 +65,30 @@ const ModalScreen = () => {
     });
   };
 
+  useEffect(() => {
+    navigation.setOptions({
+      gestureEnabled: false,
+      headerShown: false,
+    });
+  }, [navigation]);
+
+  const addImageField = () => {
+    setImages([...images, '']);
+  };
+
+  const removeImageField = (index) => {
+    const updatedImages = images.filter((_, i) => i !== index);
+    setImages(updatedImages);
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={{ flex: 1, alignItems: 'center', paddingTop: 20, paddingHorizontal: 20 }}>
-        <Text style={{ fontSize: 20, color: 'gray', padding: 10, fontWeight: 'bold' }}>
+      <View style={{ flex: 1, alignItems: 'center', paddingTop: 100, paddingHorizontal: 20 }}>
+        <Text style={{ fontSize: 30, color: 'gray', padding: 10, fontWeight: 'bold' }}>
           Welcome {user.displayName}
         </Text>
         <View style={{ alignItems: 'flex-start', width: '100%' }}>
-          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
-            Display Name
-          </Text>
+          <Text style={{ padding: 10, fontWeight: 'bold', color: '#03A9F4', fontSize: 16, }}>Display Name</Text>
           <TextInput
             value={name}
             onChangeText={(text) => setName(text)}
@@ -82,30 +103,11 @@ const ModalScreen = () => {
               borderRadius: 8,
             }}
           />
-          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
-            Profile Pic
-          </Text>
-          <TextInput
-            value={image}
-            onChangeText={(text) => setImage(text)}
-            placeholder="Enter a Profile Pic URL"
-            style={{
-              fontSize: 20,
-              padding: 10,
-              marginBottom: 20,
-              width: '100%',
-              borderWidth: 1,
-              borderColor: 'gray',
-              borderRadius: 8,
-            }}
-          />
-          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
-            Phone Number
-          </Text>
+          <Text style={{ padding: 10, fontWeight: 'bold', color: '#03A9F4', fontSize: 16 }}>Phone Number</Text>
           <TextInput
             value={occupation}
             onChangeText={(text) => setOccupation(text)}
-            placeholder="Enter your occupation"
+            placeholder="Enter your Phone Number"
             style={{
               fontSize: 20,
               padding: 10,
@@ -116,9 +118,7 @@ const ModalScreen = () => {
               borderRadius: 8,
             }}
           />
-          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
-            Your Age
-          </Text>
+          <Text style={{ padding: 10, fontWeight: 'bold', color: '#03A9F4', fontSize: 16 }}>Your Age</Text>
           <Dropdown
             style={{
               width: '100%',
@@ -141,9 +141,7 @@ const ModalScreen = () => {
               setAge(item.value);
             }}
           />
-          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
-            The University
-          </Text>
+          <Text style={{ padding: 10, fontWeight: 'bold', color: '#03A9F4', fontSize: 16 }}>Your University</Text>
           <Dropdown
             style={{
               width: '100%',
@@ -168,9 +166,7 @@ const ModalScreen = () => {
               setUniversity(item);
             }}
           />
-          <Text style={{ padding: 10, fontWeight: 'bold', color: 'red' }}>
-            The Gender
-          </Text>
+          <Text style={{ padding: 10, fontWeight: 'bold', color: '#03A9F4', fontSize: 16 }}>Your Gender</Text>
           <Dropdown
             style={{
               width: '100%',
@@ -195,14 +191,14 @@ const ModalScreen = () => {
           />
         </View>
         <TouchableOpacity
-          onPress={goToLifestyleScreen}
+          onPress={saveProfileData}
           style={{
             width: '90%',
             padding: 12,
             borderRadius: 16,
             position: 'absolute',
             bottom: 20,
-            backgroundColor: incomplete ? 'gray' : 'red',
+            backgroundColor: incomplete ? 'gray' : '#1E90FF',
             alignItems: 'center',
           }}
         >
@@ -214,4 +210,3 @@ const ModalScreen = () => {
 };
 
 export default ModalScreen;
-//this

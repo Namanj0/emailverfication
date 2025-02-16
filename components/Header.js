@@ -38,13 +38,13 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   title: {
-    fontSize: 20,
+    fontSize: 26,
     fontWeight: 'bold',
-    paddingLeft: 8,
+    paddingLeft: 6,
   },
   callButton: {
     borderRadius: 50,
-    marginRight: 16,
+    marginRight: 35,
     padding: 12,
     backgroundColor: '#fde4e4', // Light red background
   },

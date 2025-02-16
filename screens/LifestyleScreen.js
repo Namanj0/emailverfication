@@ -2,19 +2,46 @@ import { StyleSheet, FlatList, View, Text, TouchableOpacity, Alert } from "react
 import React, { useState } from "react";
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import Checkbox from 'expo-checkbox';
+import Slider from '@react-native-community/slider';
 import { db } from '../firebase';
 
-// Sample color palette matching ModalScreen
 const COLORS = {
-  primary: '#ff6f61',
+  primary: '#03A9F4',
   secondary: '#eeeeee',
   textPrimary: '#333333',
   textSecondary: '#ffffff',
   buttonDisabled: '#b0bec5',
-  buttonActive: '#ff6f61',
+  buttonActive: '#1E90FF',
 };
 
-// Existing questions array
+// Define labels for cleanliness and noise levels
+const cleanlinessLabels = [
+  "Nah... I’m a Mess",  // 1
+  "It’s a Disaster Zone", // 2
+  "Clean-ish",  // 3
+  "I Can’t Find the Floor", // 4
+  "Not Bad, Not Great", // 5
+  "Kinda Clean, But Not Really", // 6
+  "Clean Enough to Post a Pic", // 7
+  "Neat Freak Mode Activated", // 8
+  "Everything’s Sparkling", // 9
+  "OCD Level Clean" // 10
+];
+
+const noiseLabels = [
+  "Shh... Whispering", // 1
+  "Can Hear My Thoughts", // 2
+  "I’m More of a Silent Movie", // 3
+  "Talking Softly", // 4
+  "Normal Talk, Not a Party", // 5
+  "Slightly Louder Than I Should Be", // 6
+  "Music Is My Mood", // 7
+  "Neighbors Are Complaining", // 8
+  "I’m Basically a DJ", // 9
+  "Speakers Full Blast" // 10
+];
+
 const questions = [
   {
     id: 1,
@@ -58,12 +85,29 @@ const questions = [
     minSelection: 1,
     maxSelection: 1,
   },
+  {
+    id: 5,
+    question: "Cleanliness",
+    type: "slider",
+    value: 5,
+    min: 1,
+    max: 10,
+  },
+  {
+    id: 6,
+    question: "Noise Level",
+    type: "slider",
+    value: 5,
+    min: 1,
+    max: 10,
+  },
 ];
 
 const LifestyleScreen = () => {
   const [data, setData] = useState(questions);
   const navigation = useNavigation();
   const route = useRoute();
+  const [isHonestChecked, setIsHonestChecked] = useState(false);
   const { userProfile } = route.params;
 
   const onSelect = (questionId, optionIndex) => {
@@ -74,10 +118,7 @@ const LifestyleScreen = () => {
         if (question.maxSelection === 1) {
           return {
             ...question,
-            options: question.options.map((option, index) => ({
-              ...option,
-              selected: index === optionIndex ? !option.selected : false,
-            })),
+            options: question.options.map((option, index) => (index === optionIndex ? { ...option, selected: !option.selected } : { ...option, selected: false })),
           };
         }
 
@@ -100,19 +141,30 @@ const LifestyleScreen = () => {
     setData(newData);
   };
 
+  const onSliderChange = (questionId, value) => {
+    const newData = data.map((question) =>
+      question.id === questionId ? { ...question, value } : question
+    );
+    setData(newData);
+  };
+
   const isAllQuestionsAnswered = () => {
     return data.every((question) =>
-      question.options.some((option) => option.selected)
+      question.type === "slider" ? question.value !== null : question.options.some((option) => option.selected)
     );
   };
 
   const handleContinue = async () => {
-    if (isAllQuestionsAnswered()) {
+    if (isAllQuestionsAnswered() && isHonestChecked) {
       try {
         const updatedLifestyle = data.reduce((acc, question) => {
-          const selectedOption = question.options.find((option) => option.selected);
-          if (selectedOption) {
-            acc[question.question] = selectedOption.label;
+          if (question.type === "slider") {
+            acc[question.question] = question.value;
+          } else {
+            const selectedOption = question.options.find((option) => option.selected);
+            if (selectedOption) {
+              acc[question.question] = selectedOption.label;
+            }
           }
           return acc;
         }, {});
@@ -128,30 +180,52 @@ const LifestyleScreen = () => {
         Alert.alert('Error!', error.message);
       }
     } else {
-      Alert.alert("Please answer all questions before continuing.");
+      Alert.alert("Please answer all questions and confirm your honesty before continuing.");
     }
   };
 
-  const renderQuestion = ({ item: question }) => (
-    <View style={styles.questionContainer}>
-      <Text style={styles.questionText}>{question.question}</Text>
-      <FlatList
-        data={question.options}
-        renderItem={({ item, index }) => (
-          <TouchableOpacity
-            style={[styles.item, item.selected && styles.selectedItem]}
-            onPress={() => onSelect(question.id, index)}
-          >
-            <Text style={[styles.itemText, item.selected && styles.selectedItemText]}>{item.label}</Text>
-          </TouchableOpacity>
-        )}
-        keyExtractor={(item, index) => index.toString()}
-        numColumns={3}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={styles.listContent}
-      />
-    </View>
-  );
+  const renderQuestion = ({ item: question }) => {
+    if (question.type === "slider") {
+      return (
+        <View style={styles.questionContainer}>
+          <Text style={styles.questionText}>{question.question}</Text>
+          <Slider
+            style={styles.slider}
+            minimumValue={question.min}
+            maximumValue={question.max}
+            step={1}
+            value={question.value}
+            onValueChange={(value) => onSliderChange(question.id, value)}
+            minimumTrackTintColor={COLORS.primary}
+            maximumTrackTintColor="#ddd"
+            thumbTintColor={COLORS.primary}
+          />
+          <Text style={styles.sliderValue}>Selected: {question.question === "Cleanliness" ? cleanlinessLabels[question.value - 1] : noiseLabels[question.value - 1]}</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.questionContainer}>
+        <Text style={styles.questionText}>{question.question}</Text>
+        <FlatList
+          data={question.options}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              style={[styles.item, item.selected && styles.selectedItem]}
+              onPress={() => onSelect(question.id, index)}
+            >
+              <Text style={[styles.itemText, item.selected && styles.selectedItemText]}>{item.label}</Text>
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={3}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.listContent}
+        />
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -163,7 +237,19 @@ const LifestyleScreen = () => {
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
       />
-      <TouchableOpacity style={[styles.button, !isAllQuestionsAnswered() && styles.buttonDisabled]} onPress={handleContinue} disabled={!isAllQuestionsAnswered()}>
+      <View style={styles.checkboxContainer}>
+        <Checkbox
+          value={isHonestChecked}
+          onValueChange={setIsHonestChecked}
+          style={styles.checkbox}
+        />
+        <Text style={styles.checkboxLabel}>I confirm that all my answers are honest.</Text>
+      </View>
+      <TouchableOpacity
+        style={[styles.button, !isAllQuestionsAnswered() || !isHonestChecked ? styles.buttonDisabled : styles.buttonActive]}
+        onPress={handleContinue}
+        disabled={!isAllQuestionsAnswered() || !isHonestChecked}
+      >
         <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
     </View>
@@ -182,6 +268,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginBottom: 10,
     color: COLORS.textPrimary,
+    marginTop: 100,
   },
   listContent: {
     justifyContent: 'flex-start',
@@ -197,6 +284,17 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     textAlign: 'left',
   },
+  slider: {
+    width: '100%',
+    height: 40,
+    marginTop: 10,
+  },
+  sliderValue: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+    marginTop: 5,
+  },
   row: {
     justifyContent: 'flex-start',
   },
@@ -207,53 +305,60 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginHorizontal: '1.5%',
     borderColor: '#ddd',
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.secondary,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
   },
   selectedItem: {
     backgroundColor: COLORS.primary,
-    borderWidth: 0,
-  },
-  itemText: {
-    fontSize: 16,
-    color: COLORS.textPrimary,
-    textAlign: 'center',
+    borderColor: COLORS.primary,
   },
   selectedItemText: {
     color: COLORS.textSecondary,
   },
+  itemText: {
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 20,
+  },
+  checkbox: {
+    marginRight: 10,
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: COLORS.textPrimary,
+  },
   button: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 15,
-    paddingHorizontal: 80,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: 25,
-    alignSelf: 'center',
     marginTop: 30,
     marginBottom: 30,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 5,
+  },
+  buttonActive: {
+    backgroundColor: COLORS.primary,
   },
   buttonDisabled: {
     backgroundColor: COLORS.buttonDisabled,
   },
   buttonText: {
-    color: COLORS.textSecondary,
     fontSize: 18,
+    color: COLORS.textSecondary,
     fontWeight: 'bold',
   },
   underline: {
-    height: 2,
+    height: 3,
+    width: '40%',
     backgroundColor: COLORS.primary,
-    marginBottom: 10,
+    marginBottom: 30,
   },
 });
 

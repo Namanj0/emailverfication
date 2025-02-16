@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 export default function BottomBar() {
   const navigation = useNavigation();
@@ -17,23 +17,30 @@ export default function BottomBar() {
   };
 
   const handleHomePress = () => {
-    navigation.navigate('HomeScreen'); // Assuming Swipes is the home screen
+    navigation.navigate('HomeScreen');
+  };
+
+  const handleFeaturesPress = () => {
+    navigation.navigate('FeaturesScreen');
   };
 
   const getIconColor = (routeName) => {
-    return currentRoute === routeName ? '#4FD0E9' : '#5c5c5c';
+    return currentRoute === routeName ? '#03A9F4' : '#5c5c5c';
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleHomePress}>
-        <FontAwesome5 name="house-damage" size={27} color={getIconColor('HomeScreen')} />
+        <FontAwesome5 name="house-damage" size={30} color={getIconColor('HomeScreen')} />
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
+      <TouchableOpacity onPress={handleCommentsPress}>
         <Ionicons name="chatbubbles-sharp" size={30} color={getIconColor('Chat')} />
       </TouchableOpacity>
+      <TouchableOpacity onPress={handleFeaturesPress}>
+        <MaterialIcons name="apps" size={30} color={getIconColor('FeaturesScreen')} />
+      </TouchableOpacity>
       <TouchableOpacity onPress={handleUserPress}>
-        <FontAwesome name="user" size={27} color={getIconColor('Logout')} />
+        <FontAwesome name="user" size={30} color={getIconColor('Logout')} />
       </TouchableOpacity>
     </View>
   );
@@ -54,8 +61,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 5.46,
     elevation: 9,
-    position: 'absolute', // Fix the position
-    bottom: 0, // Align to the bottom
-    width: '100%', // Ensure it covers the full width
+    position: 'absolute',
+    bottom: 0,
+    width: '100%',
   },
 });

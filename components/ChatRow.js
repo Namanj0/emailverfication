@@ -30,6 +30,11 @@ const ChatRow = ({ matchDetails }) => {
     [matchDetails.id, db]
   );
 
+  // Use the first image in the images array or fallback to profilePicture if images array is empty
+  const profileImage = matchedUserInfo?.images && matchedUserInfo.images.length > 0
+    ? matchedUserInfo.images[0]
+    : matchedUserInfo?.profilePicture;
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -38,7 +43,7 @@ const ChatRow = ({ matchDetails }) => {
       }
     >
       <Image
-        source={{ uri: matchedUserInfo?.photoURL }}
+        source={{ uri: profileImage }}
         style={styles.image}
       />
       <View style={styles.textContainer}>

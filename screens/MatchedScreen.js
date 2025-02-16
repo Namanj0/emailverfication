@@ -7,17 +7,30 @@ const MatchedScreen = () => {
   const { params } = useRoute();
   const { loggedInProfile, userSwiped } = params;
 
+  // Get images or default to profilePicture if images array is empty
+  const loggedInProfileImages = loggedInProfile.images && loggedInProfile.images.length > 0
+    ? loggedInProfile.images
+    : [loggedInProfile.profilePicture];
+
+  const userSwipedImages = userSwiped.images && userSwiped.images.length > 0
+    ? userSwiped.images
+    : [userSwiped.profilePicture];
+
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
-        <Image style={styles.matchImage} source={{ uri: 'https://qph.cf2.quoracdn.net/main-qimg-e56f7a288554902c6e07186434e88a02' }} />
+        <Image style={styles.matchImage} source={require('../assets/images/match.png')} />
       </View>
       <Text style={styles.matchText}>
-        You and {userSwiped.displayName} have liked each other.
+        You and {userSwiped.displayName} are ready to be roomies!
       </Text>
       <View style={styles.profilesContainer}>
-        <Image source={{ uri: loggedInProfile.photoURL }} style={styles.profileImage} />
-        <Image source={{ uri: userSwiped.photoURL }} style={styles.profileImage} />
+        {loggedInProfileImages.slice(0, 1).map((imageUri, index) => (
+          <Image key={`loggedInProfileImage-${index}`} source={{ uri: imageUri }} style={styles.profileImage} />
+        ))}
+        {userSwipedImages.slice(0, 1).map((imageUri, index) => (
+          <Image key={`userSwipedImage-${index}`} source={{ uri: imageUri }} style={styles.profileImage} />
+        ))}
       </View>
       <TouchableOpacity
         style={styles.button}
@@ -44,63 +57,64 @@ const MatchedScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FF5864',
+    backgroundColor: '#03A9F4',
     paddingTop: 20,
     opacity: 0.95,
   },
   imageContainer: {
     justifyContent: 'center',
-    alignItems: 'center', // Center the match image
+    alignItems: 'center',
     paddingHorizontal: 10,
-    paddingTop: 30, // Added extra padding for better spacing
+    paddingTop: 30,
   },
   matchImage: {
-    height: 100, // Increased size for better visibility
-    width: '80%', // Slightly reduced width for better centering
+    height: 100,
+    width: '100%',
     resizeMode: 'contain',
+    borderRadius: 19,
   },
   matchText: {
     color: 'white',
-    fontWeight: '800', // Made text bolder
-    fontSize: 22, // Increased font size
+    fontWeight: '800',
+    fontSize: 22,
     textAlign: 'center',
-    marginTop: 20, // Increased margin for better spacing
+    marginTop: 20,
   },
   profilesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    marginTop: 20, // Increased margin for better spacing
+    marginTop: 20,
   },
   profileImage: {
-    height: 140, // Slightly larger profile images
-    width: 140, // Maintain square aspect ratio
-    borderRadius: 70, // Make the profile images circular
-    borderWidth: 4, // Added border for emphasis
-    borderColor: '#fff', // White border around profile images
-    shadowColor: '#000', // Add shadow for a 3D effect
+    height: 140,
+    width: 140,
+    borderRadius: 70,
+    borderWidth: 4,
+    borderColor: '#fff',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 8, // Elevation for Android shadow
+    elevation: 8,
   },
   button: {
     backgroundColor: 'white',
-    margin: 10, // Increased margin for better spacing
-    paddingHorizontal: 30, // Increased padding for a more prominent button
-    paddingVertical: 18, // Increased padding for better touch targets
+    margin: 10,
+    paddingHorizontal: 30,
+    paddingVertical: 18,
     borderRadius: 30,
-    marginTop: 25, // Increased margin for spacing
-    shadowColor: '#000', // Added shadow for button
+    marginTop: 25,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 5, // Elevation for Android shadow
+    elevation: 5,
   },
   buttonText: {
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 18, // Increased font size for readability
-    color: '#FF5864', // Matched button text color with the theme
+    fontSize: 18,
+    color: '#03A9F4',
   },
 });
 
